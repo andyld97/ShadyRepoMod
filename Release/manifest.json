@@ -1,0 +1,9 @@
+{
+  "name": "ShadyRepoMod",
+  "version_number": "1.0.3",
+  "website_url": "https://github.com/andyld97",
+  "description": "With this mod you are able to steal others lives if you are low (<= 5 HP)",
+  "dependencies": [
+    "BepInEx-BepInExPack-5.4.2100"
+  ]
+}

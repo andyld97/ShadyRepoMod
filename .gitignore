@@ -398,3 +398,7 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+# Compiled output
+/Release/plugins/*.*
+/plugins/Andy-ShadyRepoMod/*.*
