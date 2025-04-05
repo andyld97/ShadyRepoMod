@@ -100,122 +100,40 @@ public static class PlayerHealthGrabpatch
                 PlayerAvatar self = item.playerAvatar;
                 PlayerAvatar other = __instance.playerAvatar;
 
-                /*
-                    self  => Wird sind der Spieler der die PlayerHealthGrab-Funktionalität ausführt.
-                    other => Ist der Spieler der gerade gegriffen wird (also der Spieler, der in der playerGrabbing-Liste enthalten ist).
+                // ShadyMod.Logger.LogDebug($"self is {self.playerName} with {self.playerHealth.health} HP");
+                // ShadyMod.Logger.LogDebug($"other is {other.playerName} with {other.playerHealth.health} HP");
 
-                    => self (sind wir mit wenig HP) "greift" (grabbing) other (mit ggf. mehr HP)
-                    => Es war genau anders herum!!!! (obviously, aber die Logik mit self und other bleibt trotzdem bestehen)
-                */
+                int maxHpSelf = ShadyMod.MaxPlayerHpConfig?.Value ?? 9;
+                int minHpOtherPlayer = ShadyMod.MinPlayerHpConfig?.Value ?? 20;
 
-                ShadyMod.Logger.LogDebug($"self is {self.playerName} with {self.playerHealth.health} HP");
-                ShadyMod.Logger.LogDebug($"other is {other.playerName} with {other.playerHealth.health} HP");
+                if (maxHpSelf <= 0)
+                    maxHpSelf = 1;    
+                if (maxHpSelf > 9)
+                    maxHpSelf = 9;
 
-                // Zunächst prüfen, ob self überhaupt berechtigt ist, HP abzuziehen (wenn self <= 5 HP hat)
-                if (self.playerHealth.health <= 5)
+                if (minHpOtherPlayer < 15)
+                    minHpOtherPlayer = 15;
+                else if (minHpOtherPlayer > 100)
+                    minHpOtherPlayer = 100; 
+
+                // Check if player is allowed to stehal health from other player
+                if (self.playerHealth.health <= maxHpSelf)
                 {
-                    // Prüfen, ob other genug hat, um HP abzuziehen
-                    int val = ShadyMod.MinPlayerHpConfig?.Value ?? 20;
-                    if (other.playerHealth.health >= val)
+                    // Check if other player has enough HP to steal
+                    if (other.playerHealth.health >= minHpOtherPlayer)
                     {
                         int health = other.playerHealth.health / 2;
 
-                        // Okay, Player hat genug HP, um self zu heilen.
                         ShadyMod.Logger.LogDebug($"Stealing health from player (Amount: {health}) ...");
 
-                        if (ShadyMod.SpeakConfig?.Value ?? true)
-                            SpeakHealMessage(self, other);
+                        if (ShadyMod.EnableTalkConfig?.Value ?? true)
+                            SpeakHelper.SpeakHealMessage(self, other, ShadyMod.UseShadyLanguageConfig?.Value ?? true);
 
                         self.playerHealth.HealOther(health, true);
                         other.playerHealth.HurtOther(health, Vector3.zero, savingGrace: false);
-
-                        // Alter Code:
-                        // __instance.grabbingTimer = 0f;
                     }
-                    else
-                        ShadyMod.Logger.LogDebug("Not stealing health from player (other player has too few HP)");
                 }
-                else
-                    ShadyMod.Logger.LogDebug("Not stealing health from player (health <= 5)");
             }
         }
-    }
-
-    // Alter Code:
-    /*
-    [HarmonyPostfix, HarmonyPatch(typeof(PlayerHealthGrab), nameof(PlayerHealthGrab.Update))]
-    public static void OnPlayerHealthGrab(PlayerHealthGrab __instance)
-    {
-        bool flag = true;
-        if (__instance.playerAvatar.isDisabled || __instance.hideLerp > 0f)
-            flag = false;
-
-        if (__instance.colliderActive != flag)
-        {
-            __instance.colliderActive = flag;
-            __instance.physCollider.enabled = __instance.colliderActive;
-        }
-
-        if (!__instance.colliderActive || (GameManager.Multiplayer() && !PhotonNetwork.IsMasterClient))
-            return;
-
-        if (__instance.staticGrabObject.playerGrabbing.Count > 0)
-        {
-            __instance.grabbingTimer += Time.deltaTime;
-            TryStealHealthFromOtherPlayer(__instance, __instance.staticGrabObject.playerGrabbing);
-
-            if (__instance.grabbingTimer >= 1f)
-                __instance.grabbingTimer = 0f;
-        }
-        else
-            __instance.grabbingTimer = 0f;
-    }*/
-
-    private static readonly string[] messagesOther = new string[] 
-    {
-        "Was soll das {self}?",
-        "Spinnst du?",
-        "Hast du noch all Tassen im Schrank?",
-        "Please leave me alone!",
-        "Neieieiein! Kochen Sie mir keinen!",
-        "Wer war das?",
-        "Das war aber nicht nett",
-        "Warum machst du sowas?",
-        "Outsch!",
-        "Das ist beschissen!",
-        "Bist du dumm?",
-        "Lass das",
-        "Willst du Stress?",
-        "Ich habe dir das verboten.",
-        "Das ist nicht fair",
-        "Das habe ich gesehen",
-        "Was machst du denn?"
-    };
-
-    private static readonly string[] messagesSelf = new string[]
-    {
-        "Danke für das Healing {other}.",
-        "shady >> suple",
-        "HOOHOOHHOOOHHOHOHOH",
-        "I love you <3",       
-        "Selber schuld",
-        "Das hast du jetzt davon",
-        "Huhoh, jetzt bist du dran!"
-    };
-
-    private static void SpeakHealMessage(PlayerAvatar self, PlayerAvatar other)
-    {
-        int whichArray = Random.Range(1, 2);
-        string[] toChoose = whichArray == 1 ? messagesSelf : messagesOther;
-        PlayerAvatar? who = whichArray == 1 ? self : other;
-
-        int rngMessage = Random.Range(0, toChoose.Length);        
-        string message = toChoose[rngMessage].Replace("{self}", self.playerName).Replace("{other}", other.playerName);
-
-        if (!string.IsNullOrEmpty(message))
-        {
-            ShadyMod.Logger.LogDebug($"Sending message: {message} to {who?.playerName}");
-            who?.ChatMessageSend(message, who.isCrouching);
-        }
-    }
+    }    
 }

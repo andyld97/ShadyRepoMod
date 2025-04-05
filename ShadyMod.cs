@@ -6,9 +6,10 @@ using UnityEngine;
 
 namespace ShadyMod;
 
-[BepInPlugin("Andy.ShadyMod", "ShadyMod",  "1.0.3")]
+[BepInPlugin("Andy.ShadyMod", "ShadyMod", "1.0.4")]
 public class ShadyMod : BaseUnityPlugin
 {
+    #region Properties
     internal static ShadyMod Instance { get; private set; } = null!;
 
     internal new static ManualLogSource Logger => Instance._logger;
@@ -17,13 +18,24 @@ public class ShadyMod : BaseUnityPlugin
 
     internal Harmony? Harmony { get; set; }
 
-    public static ConfigEntry<bool>? SpeakConfig = null;   
-    public static ConfigEntry<int>? MinPlayerHpConfig;
+    #endregion
+
+    #region Config Properties
+
+    public static ConfigEntry<int>? MinPlayerHpConfig { get; private set; } = null;
+
+    public static ConfigEntry<int>? MaxPlayerHpConfig { get; private set; } = null;
+
+    public static ConfigEntry<bool>? EnableTalkConfig { get; private set; } = null;
+
+    public static ConfigEntry<bool>? UseShadyLanguageConfig { get; private set; } = null;
+
+    #endregion
 
     private void Awake()
     {
         Instance = this;
-        
+
         // Prevent the plugin from being deleted
         this.gameObject.transform.parent = null;
         this.gameObject.hideFlags = HideFlags.HideAndDontSave;
@@ -32,8 +44,11 @@ public class ShadyMod : BaseUnityPlugin
 
         Logger.LogInfo($"{Info.Metadata.GUID} v{Info.Metadata.Version} has loaded!");
 
-        SpeakConfig = Config.Bind("Health", "Speak", true, "True, when the player should speak");
-        MinPlayerHpConfig = Config.Bind("Health", "MinPlayerHealth", 20, "The amount the other player must have at least to steal from!");
+        MinPlayerHpConfig = Config.Bind("Health", "MinPlayerHealth", 20, "Required minimum health of the target player to steal (Min: 15 | Max: 100).");
+        MaxPlayerHpConfig = Config.Bind("Health", "MaxPlayerHealth", 9, "Maximum health you can have to steal from the target (Min: 1 | Max: 9).");
+
+        EnableTalkConfig = Config.Bind("Health", "Speak", true, "Enable players to talk when their life is stolen.");
+        UseShadyLanguageConfig = Config.Bind("Health", "SpeakShadyLanguage", true, "If false, [shady] insiders are excluded, and only English is used.");
     }
 
     internal void Patch()
