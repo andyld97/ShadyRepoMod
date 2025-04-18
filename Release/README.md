@@ -19,7 +19,7 @@ IMPORTANT: Only the host settings are considered!
 - Player can now also steal when HP <= 5
 - Improved speak messages
 
-#### v1.0.1 (29.03.2024):
+### v1.0.1 (29.03.2024):
 - Added config file
 - Changed loglevel
 - Changed speak messages
